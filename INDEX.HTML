@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="Editor de Pixel Art simples e eficiente">
+    <title>PIXELART - Editor de Pixel Art</title>
+
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+        :root {
+            --bg-primary: #212121;
+            --bg-secondary: #292929;
+            --bg-tertiary: #2c2c2c;
+            --text-primary: #ebebeb;
+            --text-secondary: #d5d5d5;
+            --pixel-default: #444;
+            --accent: #4e7fff;
+            --accent-hover: #3a6ae0;
+            --shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            overflow-x: hidden;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        header {
+            background-color: var(--bg-secondary);
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--accent);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+
+        main {
+            display: flex;
+            position: relative;
+            min-height: calc(100vh - 60px);
+        }
+
+        aside {
+            width: 100%;
+            max-width: 280px;
+            background-color: var(--bg-tertiary);
+            padding: 25px 20px;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .canvas-container {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-x: auto;
+        }
+
+        .canvas {
+            background-color: #fff;
+            border: 2px solid var(--bg-tertiary);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .pixel {
+            width: 20px;
+            height: 20px;
+            background-color: var(--pixel-default);
+            user-select: none;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tool-button {
+            background-color: var(--bg-secondary);
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .tool-button:hover, .tool-button.active {
+            background-color: var(--accent);
+        }
+
+        .option-group {
+            margin-bottom: 25px;
+        }
+
+        .option-title {
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .input-color-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-preview {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--text-primary);
+            overflow: hidden;
+        }
+
+        .input-color {
+            appearance: none;
+            width: 100%;
+            height: 42px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .input-color::-moz-color-swatch,
+        .input-color::-webkit-color-swatch {
+            border: none;
+            border-radius: 0;
+        }
+
+        .size-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-size {
+            width: 70px;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--bg-primary);
+            outline: none;
+        }
+
+        .button-size {
+            background-color: var(--bg-secondary);
+            border: none;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .button-size:hover {
+            background-color: var(--accent);
+        }
+
+        .used-colors {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .button-color {
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--text-primary);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .button-color:hover {
+            transform: scale(1.1);
+        }
+
+        .button-color.active {
+            border-color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .button-primary {
+            width: 100%;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background-color: var(--accent);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .button-secondary {
+            width: 100%;
+            border: 1px solid var(--text-secondary);
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background-color: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .canvas-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .zoom-value {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .zoom-button {
+            background-color: var(--bg-secondary);
+            border: none;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .zoom-button:hover {
+            background-color: var(--accent);
+        }
+
+        .mobile-menu-button {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .undo-redo {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            aside {
+                position: fixed;
+                left: 0;
+                top: 60px;
+                z-index: 100;
+                transform: translateX(-100%);
+                box-shadow: var(--shadow);
+            }
+
+            aside.open {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-button {
+                display: block;
+            }
+
+            .canvas-container {
+                padding: 10px;
+            }
+            
+            .pixel {
+                width: 15px;
+                height: 15px;
+            }
+        }
+
+        /* Tema claro */
+        body.light-theme {
+            --bg-primary: #f0f0f0;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e5e5e5;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --pixel-default: #cccccc;
+            --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 3H8V7H4V3Z M10 3H14V7H10V3Z M16 3H20V7H16V3Z M4 9H8V13H4V9Z M10 9H14V13H10V9Z M16 9H20V13H16V9Z M4 15H8V19H4V15Z M10 15H14V19H10V15Z M16 15H20V19H16V15Z" />
+            </svg>
+            <h1>PIXELART</h1>
+        </div>
+        <div>
+            <button class="mobile-menu-button" id="menuToggle" aria-label="Abrir menu">
+                ☰
+            </button>
+            <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
+                🌙
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <aside id="sidebar">
+            <div class="option-group">
+                <span class="option-title">Ferramentas</span>
+                <div class="toolbar">
+                    <button class="tool-button active" id="brushTool" title="Pincel">
+                        🖌️
+                    </button>
+                    <button class="tool-button" id="eraserTool" title="Borracha">
+                        🧹
+                    </button>
+                    <button class="tool-button" id="fillTool" title="Balde de tinta">
+                        🪣
+                    </button>
+                    <button class="tool-button" id="eyedropperTool" title="Conta-gotas">
+                        👁️
+                    </button>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <span class="option-title">Tamanho da tela</span>
+                <div class="size-controls">
+                    <button class="button-size" id="decreaseSize" aria-label="Diminuir tamanho">-</button>
+                    <input type="number" class="input-size" id="canvasSize" min="1" max="64" value="16" aria-label="Tamanho da tela">
+                    <button class="button-size" id="increaseSize" aria-label="Aumentar tamanho">+</button>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <span class="option-title">Cor</span>
+                <div class="input-color-container">
+                    <div class="color-preview" id="colorPreview"></div>
+                    <input type="color" class="input-color" id="colorPicker" value="#4e7fff" aria-label="Selecionar cor">
+                </div>
+            </div>
+
+            <div class="option-group">
+                <span class="option-title">Cores usadas</span>
+                <section class="used-colors" id="usedColors"></section>
+            </div>
+
+            <div class="option-group action-buttons">
+                <button class="button-primary" id="clearCanvas">
+                    <span>Limpar tela</span>
+                </button>
+                
+                <button class="button-primary" id="saveImage">
+                    <span>Baixar imagem</span>
+                </button>
+                
+                <button class="button-secondary" id="saveProject">
+                    <span>Salvar projeto</span>
+                </button>
+                
+                <button class="button-secondary" id="loadProject">
+                    <span>Carregar projeto</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="canvas-container">
+            <div class="zoom-controls">
+                <button class="zoom-button" id="zoomOut" aria-label="Diminuir zoom">-</button>
+                <span class="zoom-value" id="zoomValue">100%</span>
+                <button class="zoom-button" id="zoomIn" aria-label="Aumentar zoom">+</button>
+            </div>
+            
+            <div class="canvas" id="canvas"></div>
+            
+            <div class="canvas-actions">
+                <div class="undo-redo">
+                    <button class="tool-button" id="undoButton" title="Desfazer" disabled>↩️</button>
+                    <button class="tool-button" id="redoButton" title="Refazer" disabled>↪️</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos DOM
+            const canvas = document.getElementById('canvas');
+            const inputSize = document.getElementById('canvasSize');
+            const colorPicker = document.getElementById('colorPicker');
+            const colorPreview = document.getElementById('colorPreview');
+            const usedColors = document.getElementById('usedColors');
+            const saveImageBtn = document.getElementById('saveImage');
+            const saveProjectBtn = document.getElementById('saveProject');
+            const loadProjectBtn = document.getElementById('loadProject');
+            const clearCanvasBtn = document.getElementById('clearCanvas');
+            const decreaseSize = document.getElementById('decreaseSize');
+            const increaseSize = document.getElementById('increaseSize');
+            const zoomIn = document.getElementById('zoomIn');
+            const zoomOut = document.getElementById('zoomOut');
+            const zoomValue = document.getElementById('zoomValue');
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const themeToggle = document.getElementById('themeToggle');
+            const undoButton = document.getElementById('undoButton');
+            const redoButton = document.getElementById('redoButton');
+            
+            // Selecionar ferramentas
+            const toolButtons = document.querySelectorAll('.tool-button');
+            const brushTool = document.getElementById('brushTool');
+            const eraserTool = document.getElementById('eraserTool');
+            const fillTool = document.getElementById('fillTool');
+            const eyedropperTool = document.getElementById('eyedropperTool');
+            
+            // Constantes
+            const MIN_CANVAS_SIZE = 1;
+            const MAX_CANVAS_SIZE = 64;
+            const DEFAULT_PIXEL_COLOR = '#ffffff';
+            
+            // Variáveis de estado
+            let currentTool = 'brush';
+            let isDrawing = false;
+            let zoomLevel = 1;
+            let projectHistory = [];
+            let historyIndex = -1;
+            let currentColor = colorPicker.value;
+            
+            // Sincroniza a cor do preview com o seletor de cor
+            colorPreview.style.backgroundColor = currentColor;
+            
+            // Histórico do projeto (para desfazer/refazer)
+            function saveToHistory() {
+                // Remove qualquer futuro histórico caso tenhamos feito alterações após um desfazer
+                if (historyIndex < projectHistory.length - 1) {
+                    projectHistory = projectHistory.slice(0, historyIndex + 1);
+                }
+                
+                // Cria um snapshot do estado atual
+                const snapshot = [];
+                const rows = canvas.querySelectorAll('.row');
+                
+                rows.forEach(row => {
+                    const rowData = [];
+                    const pixels = row.querySelectorAll('.pixel');
+                    
+                    pixels.forEach(pixel => {
+                        rowData.push(pixel.style.backgroundColor || DEFAULT_PIXEL_COLOR);
+                    });
+                    
+                    snapshot.push(rowData);
+                });
+                
+                // Adiciona ao histórico
+                projectHistory.push(snapshot);
+                historyIndex++;
+                
+                // Atualiza botões de desfazer/refazer
+                updateHistoryButtons();
+            }
+            
+            function updateHistoryButtons() {
+                undoButton.disabled = historyIndex <= 0;
+                redoButton.disabled = historyIndex >= projectHistory.length - 1;
+            }
+            
+            function undo() {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    restoreFromHistory();
+                    updateHistoryButtons();
+                }
+            }
+            
+            function redo() {
+                if (historyIndex < projectHistory.length - 1) {
+                    historyIndex++;
+                    restoreFromHistory();
+                    updateHistoryButtons();
+                }
+            }
+            
+            function restoreFromHistory() {
+                const snapshot = projectHistory[historyIndex];
+                const rows = canvas.querySelectorAll('.row');
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const pixels = rows[i].querySelectorAll('.pixel');
+                    for (let j = 0; j < pixels.length; j++) {
+                        pixels[j].style.backgroundColor = snapshot[i][j];
+                    }
+                }
+            }
+            
+            // Funções para criar elementos HTML
+            function createElement(tag, className = '') {
+                const element = document.createElement(tag);
+                if (className) element.className = className;
+                return element;
+            }
+            
+            // Alternar tema claro/escuro
+            function toggleTheme() {
+                document.body.classList.toggle('light-theme');
+                themeToggle.textContent = document.body.classList.contains('light-theme') ? '🌙' : '☀️';
+                
+                // Salva preferência no localStorage
+                localStorage.setItem('pixelart-theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+            }
+            
+            // Aplicar tema salvo
+            function applyTheme() {
+                const savedTheme = localStorage.getItem('pixelart-theme');
+                if (savedTheme === 'light') {
+                    document.body.classList.add('light-theme');
+                    themeToggle.textContent = '🌙';
+                } else {
+                    themeToggle.textContent = '☀️';
+                }
+            }
+            
+            // Alternar menu lateral (mobile)
+            function toggleMenu() {
+                sidebar.classList.toggle('open');
+                menuToggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+                menuToggle.setAttribute('aria-label', sidebar.classList.contains('open') ? 'Fechar menu' : 'Abrir menu');
+            }
+            
+            // Modifica a ferramenta ativa
+            function setActiveTool(tool) {
+                currentTool = tool;
+                
+                toolButtons.forEach(button => {
+                    button.classList.remove('active');
+                });
+                
+                switch(tool) {
+                    case 'brush':
+                        brushTool.classList.add('active');
+                        break;
+                    case 'eraser':
+                        eraserTool.classList.add('active');
+                        break;
+                    case 'fill':
+                        fillTool.classList.add('active');
+                        break;
+                    case 'eyedropper':
+                        eyedropperTool.classList.add('active');
+                        break;
+                }
+            }
+            
+            // Adicionar cor ao painel de cores usadas
+            function addToUsedColors(color) {
+                // Verificar se a cor já existe nos botões
+                const existingButtons = usedColors.querySelectorAll('.button-color');
+                for (const btn of existingButtons) {
+                    if (btn.style.backgroundColor === color) {
+                        return; // A cor já existe
+                    }
+                }
+                
+                // Limitar a quantidade de cores usadas (max 16)
+                if (existingButtons.length >= 16) {
+                    usedColors.removeChild(usedColors.firstChild);
+                }
+                
+                // Criar novo botão de cor
+                const colorButton = createElement('button', 'button-color');
+                colorButton.style.backgroundColor = color;
+                colorButton.setAttribute('aria-label', `Selecionar cor ${color}`);
+                
+                colorButton.addEventListener('click', () => {
+                    currentColor = color;
+                    colorPicker.value = rgbToHex(color);
+                    colorPreview.style.backgroundColor = color;
+                    
+                    // Marcar a cor selecionada como ativa
+                    document.querySelectorAll('.button-color').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    colorButton.classList.add('active');
+                    
+                    // Se estiver usando a borracha, voltar para o pincel
+                    if (currentTool === 'eraser') {
+                        setActiveTool('brush');
+                    }
+                });
+                
+                usedColors.appendChild(colorButton);
+            }
+            
+            // Converte RGB para Hex
+            function rgbToHex(rgb) {
+                // Se já for hexadecimal, retornar como está
+                if (rgb.startsWith('#')) return rgb;
+                
+                // Extrair valores RGB da string
+                const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+                if (!match) return '#000000';
+                
+                function toHex(value) {
+                    const hex = parseInt(value).toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }
+                
+                return `#${toHex(match[1])}${toHex(match[2])}${toHex(match[3])}`;
+            }
+            
+            // Função de preenchimento (flood fill)
+            function floodFill(pixel, targetColor, replacementColor) {
+                // Evitar loops infinitos se tentar pintar da mesma cor
+                if (targetColor === replacementColor) return;
+                
+                const size = parseInt(inputSize.value);
+                const pixelMatrix = [];
+                let visited = new Set();
+                
+                // Criar matriz de pixels
+                const rows = canvas.querySelectorAll('.row');
+                for (let i = 0; i < rows.length; i++) {
+                    const rowPixels = rows[i].querySelectorAll('.pixel');
+                    pixelMatrix.push(Array.from(rowPixels));
+                }
+                
+                // Encontrar posição do pixel clicado
+                let startX = -1, startY = -1;
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        if (pixelMatrix[y][x] === pixel) {
+                            startX = x;
+                            startY = y;
+                            break;
+                        }
+                    }
+                    if (startX !== -1) break;
+                }
+                
+                // Queue para BFS
+                const queue = [{x: startX, y: startY}];
+                
+                while (queue.length > 0) {
+                    const {x, y} = queue.shift();
+                    const pixelKey = `${x},${y}`;
+                    
+                    // Verificar se já visitamos este pixel
+                    if (visited.has(pixelKey)) continue;
+                    
+                    // Verificar limites
+                    if (x < 0 || x >= size || y < 0 || y >= size) continue;
+                    
+                    // Verificar se o pixel tem a cor alvo
+                    const currentPixel = pixelMatrix[y][x];
+                    const currentColor = currentPixel.style.backgroundColor || DEFAULT_PIXEL_COLOR;
+                    
+                    if (currentColor !== targetColor) continue;
+                    
+                    // Colorir o pixel
+                    currentPixel.style.backgroundColor = replacementColor;
+                    
+                    // Marcar como visitado
+                    visited.add(pixelKey);
+                    
+                    // Adicionar pixels adjacentes à fila
+                    queue.push({x: x+1, y: y});
+                    queue.push({x: x-1, y: y});
+                    queue.push({x: x, y: y+1});
+                    queue.push({x: x, y: y-1});
+                }
+            }
+            
+            // Criar o canvas com o tamanho especificado
+            function createCanvas() {
+                canvas.innerHTML = '';
+                const size = parseInt(inputSize.value);
+                
+                for (let i = 0; i < size; i++) {
+                    const row = createElement('div', 'row');
+                    
+                    for (let j = 0; j < size; j++) {
+                        const pixel = createElement('div', 'pixel');
+                        pixel.style.backgroundColor = DEFAULT_PIXEL_COLOR;
+                        
+                        // Eventos de mouse para desenhar
+                        pixel.addEventListener('mousedown', (e) => {
+                            e.preventDefault(); // Prevenir arrasto
+                            handlePixelInteraction(pixel);
+                            isDrawing = true;
+                        });
+                        
+                        pixel.addEventListener('mouseover', () => {
+                            if (isDrawing) {
+                                handlePixelInteraction(pixel);
+                            }
+                        });
+                        
+                        pixel.addEventListener('touchstart', (e) => {
+                            e.preventDefault(); // Prevenir scroll
+                            handlePixelInteraction(pixel);
+                        });
+                        
+                        pixel.addEventListener('touchmove', (e) => {
+                            e.preventDefault(); // Prevenir scroll
+                            
+                            // Encontrar o elemento sob o toque
+                            const touch = e.touches[0];
+                            const touchElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                            
+                            // Se for um pixel, interagir com ele
+                            if (touchElement && touchElement.classList.contains('pixel')) {
+                                handlePixelInteraction(touchElement);
+                            }
+                        });
+                        
+                        row.appendChild(pixel);
+                    }
+                    
+                    canvas.appendChild(row);
+                }
+                
+                updateZoom();
+                saveToHistory(); // Guardar o estado inicial na história
+            }
+            
+            // Lidar com interação do pixel (desenho, apagar, etc)
+            function handlePixelInteraction(pixel) {
+                // Salvar cor atual do pixel para possível uso posterior
+                const currentPixelColor = pixel.style.backgroundColor || DEFAULT_PIXEL_COLOR;
+                
+                switch(currentTool) {
+                    case 'brush':
+                        pixel.style.backgroundColor = currentColor;
+                        break;
+                    case 'eraser':
+                        pixel.style.backgroundColor = DEFAULT_PIXEL_COLOR;
+                        break;
+                    case 'fill':
+                        floodFill(pixel, currentPixelColor, currentColor);
+                        break;
+                    case 'eyedropper':
+                        // Capturar cor do pixel
+                        if (currentPixelColor) {
+                            currentColor = currentPixelColor;
+                            colorPicker.value = rgbToHex(currentPixelColor);
+                            colorPreview.style.backgroundColor = currentPixelColor;
+                            
+                            // Adicionar à paleta de cores usadas
+                            addToUsedColors(currentPixelColor);
+                            
+                            // Voltar para a ferramenta de pincel
+                            setActiveTool('brush');
+                        }
+                        break;
+                }
+            }
+            
+            // Atualizar tamanho do canvas
+            function updateCanvasSize(newSize) {
+                // Validar o tamanho
+                if (newSize < MIN_CANVAS_SIZE) newSize = MIN_CANVAS_SIZE;
+                if (newSize > MAX_CANVAS_SIZE) newSize = MAX_CANVAS_SIZE;
+                
+                // Perguntar antes de redimensionar se o canvas já tem pixels pintados
+                if (canvas.querySelectorAll('.pixel').length > 0) {
+                    const isCanvasEmpty = Array.from(canvas.querySelectorAll('.pixel')).every(
+                        pixel => !pixel.style.backgroundColor || pixel.style.backgroundColor === DEFAULT_PIXEL_COLOR
+                    );
+                    
+                    if (!isCanvasEmpty && !confirm('Redimensionar apagará o desenho atual. Continuar?')) {
+                        inputSize.value = canvas.querySelectorAll('.row').length;
+                        return;
+                    }
+                }
+                
+                inputSize.value = newSize;
+                createCanvas();
+            }
+            
+            // Atualizar zoom do canvas
+            function updateZoom() {
+                canvas.style.transform = `scale(${zoomLevel})`;
+                zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
+                
+                // Atualizar tamanho dos pixels se o zoom for muito pequeno
+                const pixels = canvas.querySelectorAll('.pixel');
+                const pixelSize = zoomLevel < 0.5 ? 25 : 20;
+                
+                pixels.forEach(pixel => {
+                    pixel.style.width = `${pixelSize}px`;
+                    pixel.style.height = `${pixelSize}px`;
+                });
+            }
+            
+            // Salvar canvas como imagem
+            function saveImage() {
+                // Remover temporariamente o zoom para gerar a imagem corretamente
+                const originalTransform = canvas.style.transform;
+                canvas.style.transform = 'none';
+                
+                html2canvas(canvas, {
+                    backgroundColor: null,
+                    scale: 2 // Melhor qualidade para a imagem
+                }).then(image => {
+                    // Restaurar o zoom
+                    canvas.style.transform = originalTransform;
+                    
+                    const link = createElement('a');
+                    link.href = image.toDataURL('image/png');
+                    link.download = `pixelart_${new Date().toISOString().slice(0,10)}.png`;
+                    link.click();
+                });
+            }
+            
+            // Salvar projeto (estado atual)
+            function saveProject() {
+                const rows = canvas.querySelectorAll('.row');
+                const size = rows.length;
+                const pixelData = [];
+                
+                // Coletar dados dos pixels
+                rows.forEach(row => {
+                    const rowData = [];
+                    row.querySelectorAll('.pixel').forEach(pixel => {
+                        rowData.push(pixel.style.backgroundColor || DEFAULT_PIXEL_COLOR);
+                    });
+                    pixelData.push(rowData);
+                });
+                
+                // Coletar dados de cores usadas
+                const usedColorsData = [];
+                usedColors.querySelectorAll('.button-color').forEach(button => {
+                    usedColorsData.push(button.style.backgroundColor);
+                });
+                
+                // Criar objeto com dados do projeto
+                const projectData = {
+                    version: '1.0',
+                    size,
+                    pixels: pixelData,
+                    usedColors: usedColorsData,
+                    date: new Date().toISOString()
+                };
+                
+                // Converter para JSON e criar URL de download
+                const dataStr = JSON.stringify(projectData);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const link = createElement('a');
+                link.href = dataUri;
+                link.download = `pixelart_project_${new Date().toISOString().slice(0,10)}.json`;
+                link.click();
+            }
+            
+            // Carregar projeto
+            function loadProject() {
+                const input = createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const projectData = JSON.parse(event.target.result);
+                            
+                            // Verificar versão do projeto
+                            if (!projectData.version) {
+                                throw new Error('Formato de projeto inválido');
+                            }
+                            
+                            // Atualizar tamanho do canvas
+                            inputSize.value = projectData.size;
+                            createCanvas();
+                            
+                            // Restaurar pixels
+                            const rows = canvas.querySelectorAll('.row');
+                            for (let y = 0; y < projectData.pixels.length; y++) {
+                                const rowPixels = rows[y].querySelectorAll('.pixel');
+                                for (let x = 0; x < projectData.pixels[y].length; x++) {
+                                    rowPixels[x].style.backgroundColor = projectData.pixels[y][x];
+                                }
+                            }
+                            
+                            // Restaurar cores usadas
+                            usedColors.innerHTML = '';
+                            projectData.usedColors.forEach(color => {
+                                addToUsedColors(color);
+                            });
+                            
+                            // Salvar estado inicial após carregamento
+                            saveToHistory();
+                            
+                        } catch (error) {
+                            alert('Erro ao carregar o projeto: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+                
+                input.click();
+            }
+            
+            // Limpar o canvas
+            function clearCanvas() {
+                if (confirm('Tem certeza que deseja limpar todo o canvas?')) {
+                    const pixels = canvas.querySelectorAll('.pixel');
+                    pixels.forEach(pixel => {
+                        pixel.style.backgroundColor = DEFAULT_PIXEL_COLOR;
+                    });
+                    saveToHistory();
+                }
+            }
+            
+            // Eventos globais
+            document.addEventListener('mouseup', () => {
+                if (isDrawing) {
+                    isDrawing = false;
+                    saveToHistory();
+                }
+            });
+            
+            document.addEventListener('touchend', () => {
+                saveToHistory();
+            });
+            
+            // Atalhos de teclado
+            document.addEventListener('keydown', (e) => {
+                // Ctrl+Z para desfazer
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                }
+                
+                // Ctrl+Y para refazer
+                if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
+                
+                // B para pincel
+                if (e.key === 'b') {
+                    setActiveTool('brush');
+                }
+                
+                // E para borracha
+                if (e.key === 'e') {
+                    setActiveTool('eraser');
+                }
+                
+                // F para preenchimento
+                if (e.key === 'f') {
+                    setActiveTool('fill');
+                }
+                
+                // I para conta-gotas
+                if (e.key === 'i') {
+                    setActiveTool('eyedropper');
+                }
+            });
+            
+            // Eventos de botões
+            colorPicker.addEventListener('input', (e) => {
+                currentColor = e.target.value;
+                colorPreview.style.backgroundColor = currentColor;
+                addToUsedColors(currentColor);
+                
+                // Se estiver usando borracha, volta para pincel
+                if (currentTool === 'eraser') {
+                    setActiveTool('brush');
+                }
+            });
+            
+            inputSize.addEventListener('change', () => {
+                updateCanvasSize(parseInt(inputSize.value));
+            });
+            
+            decreaseSize.addEventListener('click', () => {
+                updateCanvasSize(parseInt(inputSize.value) - 1);
+            });
+            
+            increaseSize.addEventListener('click', () => {
+                updateCanvasSize(parseInt(inputSize.value) + 1);
+            });
+            
+            zoomIn.addEventListener('click', () => {
+                zoomLevel = Math.min(zoomLevel + 0.25, 5);
+                updateZoom();
+            });
+            
+            zoomOut.addEventListener('click', () => {
+                zoomLevel = Math.max(zoomLevel - 0.25, 0.25);
+                updateZoom();
+            });
+            
+            saveImageBtn.addEventListener('click', saveImage);
+            saveProjectBtn.addEventListener('click', saveProject);
+            loadProjectBtn.addEventListener('click', loadProject);
+            clearCanvasBtn.addEventListener('click', clearCanvas);
+            themeToggle.addEventListener('click', toggleTheme);
+            menuToggle.addEventListener('click', toggleMenu);
+            undoButton.addEventListener('click', undo);
+            redoButton.addEventListener('click', redo);
+            
+            // Eventos para ferramentas
+            brushTool.addEventListener('click', () => setActiveTool('brush'));
+            eraserTool.addEventListener('click', () => setActiveTool('eraser'));
+            fillTool.addEventListener('click', () => setActiveTool('fill'));
+            eyedropperTool.addEventListener('click', () => setActiveTool('eyedropper'));
+            
+            // Inicialização
+            applyTheme();
+            createCanvas();
+        });
+    </script>
+</body>
+</html>
